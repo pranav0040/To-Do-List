@@ -1,50 +1,34 @@
 name: Deploy
 
+# Trigger this workflow on a push to the main branch
 on:
   push:
     branches:
       - main
 
+# Define the deployment job
 jobs:
-  build:
-    name: Build
+  deploy:
+    # The runner used for the job
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
+      # Step 1: Checkout the repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: '20'  # Specify your desired Node.js version
+      # Step 2: Set up Git
+      - name: Set up Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
 
-      - name: Install dependencies
-        uses: bahmutov/npm-install@v1
-
-      - name: Build project
-        run: npm run build
-
-      - name: Upload production-ready build files
-        uses: actions/upload-artifact@v3
-        with:
-          name: production-files
-          path: ./dist
-
-  deploy:
-    name: Deploy
-    needs: build
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Download artifact
-        uses: actions/download-artifact@v3
-        with:
-          name: production-files
-          path: ./dist
-
-      - name: Deploy to GitHub Pages
-        uses: peaceiris/actions-gh-pages@v3
-        with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./dist
+      # Step 3: Deploy changes (e.g., commit & push)
+      - name: Commit and Push Changes
+        env:
+          GH_PAT: ${{ secrets.GH_PAT }}  # Personal Access Token stored in GitHub Secrets
+        run: |
+          # Make sure the working directory is clean
+          git add -A
+          git commit -m "Automated deployment via GitHub Actions" || echo "No changes to commit"
+          git push https://${{ secrets.GH_PAT }}@github.com/pranav0040/To-Do-List.git main
